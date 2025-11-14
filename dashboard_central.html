@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard Central - Analíticas | Nestlé</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/css/adminlte.min.css" />
+    <style>
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn .5s; }
+        .heatmap-table{border-collapse:collapse;width:100%}.heatmap-table th,.heatmap-table td{font-size:.7rem;text-align:center;padding:.2rem;border:1px solid #dee2e6}.heatmap-table th:first-child{text-align:left;width:60px}.heatmap-cell{width:3.8%;height:25px;transition:background-color .3s}
+        .loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 50; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+    <div class="wrapper">
+      <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <ul class="navbar-nav"><li class="nav-item"><a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a></li></ul>
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item"><a class="nav-link" data-widget="fullscreen" href="#" role="button"><i class="fas fa-expand-arrows-alt"></i></a></li>
+        </ul>
+      </nav>
+      <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        <a href="#" class="brand-link"><i class="fas fa-chart-line nav-icon ml-3 mr-2"></i><span class="brand-text font-weight-light">Analíticas Central</span></a>
+        <div class="sidebar">
+          <nav class="mt-2">
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+              <li class="nav-item"><a href="#historico" class="nav-link active" data-view="historico"><i class="nav-icon fas fa-history"></i><p>Histórico</p></a></li>
+              <li class="nav-item"><a href="#analiticas" class="nav-link" data-view="analiticas"><i class="nav-icon fas fa-chart-pie"></i><p>Analíticas</p></a></li>
+            </ul>
+          </nav>
+        </div>
+      </aside>
+      <div class="content-wrapper">
+        <div class="content-header">
+          <div class="container-fluid"><div class="row mb-2"><div class="col-sm-6"><h1 class="m-0" id="view-title">Histórico de Eventos</h1></div><div class="col-sm-6"><ol class="breadcrumb float-sm-right"><li class="breadcrumb-item"><a href="#">Inicio</a></li><li class="breadcrumb-item active" id="breadcrumb-active">Histórico</li></ol></div></div></div>
+        </div>
+        <section class="content">
+          <div class="container-fluid">
+            <!-- VISTA HISTÓRICO -->
+            <div id="historico-view" class="content-section active">
+              <div class="card"><div class="card-header"><h3 class="card-title">Filtros de Búsqueda</h3></div><div class="card-body"><div class="row g-3 align-items-center"><div class="col-md-3"><label>Sucursal:</label><select id="filtro-sucursal-hist" class="form-control"><option value="">Todas</option></select></div><div class="col-md-3"><label>ID Empleado:</label><input type="text" id="filtro-id-empleado" class="form-control" placeholder="ID Empleado"></div><div class="col-md-3"><label>Nombre:</label><input type="text" id="filtro-nombre" class="form-control" placeholder="Nombre"></div><div class="col-md-3"></div><div class="col-md-3"><label>Desde:</label><input type="date" id="filtro-fecha-desde" class="form-control"></div><div class="col-md-3"><label>Hasta:</label><input type="date" id="filtro-fecha-hasta" class="form-control"></div><div class="col-md-3 d-flex align-items-end"><button class="btn btn-primary" id="btn-filtrar">Filtrar</button><button class="btn btn-secondary ml-2" id="btn-limpiar-filtros">Limpiar</button></div></div></div></div>
+              <div class="card" id="historico-card"><div class="card-header"><h3 class="card-title">Registro de Eventos</h3></div><div class="card-body p-0"><table class="table table-striped" id="historico-table"><thead><tr><th>ID Evento</th><th>Sucursal</th><th>ID Empleado</th><th>Nombre</th><th>Hora Entrada</th><th>Hora Salida</th><th>Tiempo Dentro</th></tr></thead><tbody></tbody></table><div id="historico-vacio" class="text-center text-muted py-5" style="display: none;"><i class="fas fa-folder-open fa-3x mb-3"></i><p>No hay registros para los filtros seleccionados</p></div></div><div class="card-footer clearfix" id="pagination-controls" style="display: none;"><ul class="pagination pagination-sm m-0 float-right"><li class="page-item"><a class="page-link" href="#" id="prev-page">&laquo; Anterior</a></li><li class="page-item disabled"><span class="page-link" id="page-info">Página 1 de 1</span></li><li class="page-item"><a class="page-link" href="#" id="next-page">Siguiente &raquo;</a></li></ul></div><div id="historico-loading" class="loading-overlay" style="display: none;"><i class="fas fa-2x fa-sync-alt fa-spin"></i></div></div>
+            </div>
+             <!-- VISTA ANALÍTICAS -->
+            <div id="analiticas-view" class="content-section">
+                <div class="card" id="analiticas-card">
+                    <div class="card-header"><h3 class="card-title">Filtros de Analíticas</h3></div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3"><label>Sucursal:</label><select id="analiticas-sucursal-filter" class="form-control"><option value="">Todas</option></select></div>
+                            <div class="col-md-3"><label>Período:</label><div class="btn-group w-100" id="analiticas-periodo-filter"><button type="button" class="btn btn-outline-primary" data-periodo="hoy">Hoy</button><button type="button" class="btn btn-outline-primary active" data-periodo="semana">Semana</button><button type="button" class="btn btn-outline-primary" data-periodo="mes">Mes</button></div></div>
+                            <div class="col-md-2"><label>Desde:</label><input type="date" id="analiticas-fecha-desde" class="form-control"></div>
+                            <div class="col-md-2"><label>Hasta:</label><input type="date" id="analiticas-fecha-hasta" class="form-control"></div>
+                            <div class="col-md-2 d-flex align-items-end"><button class="btn btn-primary" id="btn-filtrar-analiticas">Aplicar Filtros</button></div>
+                        </div>
+                    </div>
+                    <div id="analiticas-loading" class="loading-overlay" style="display: none;"><i class="fas fa-2x fa-sync-alt fa-spin"></i></div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-3 col-6"><div class="small-box bg-info"><div class="inner"><h3><span id="kpi-promedio">--</span></h3><p>Tiempo Promedio Exposición</p></div><div class="icon"><i class="fas fa-stopwatch"></i></div></div></div>
+                    <div class="col-lg-3 col-6"><div class="small-box bg-success"><div class="inner"><h3><span id="kpi-cumplimiento">--</span><sup style="font-size: 20px">%</sup></h3><p>% Cumplimiento Seguridad</p></div><div class="icon"><i class="fas fa-shield-alt"></i></div></div></div>
+                    <div class="col-lg-3 col-6"><div class="small-box bg-warning"><div class="inner"><h3><span id="kpi-tasa-excedidos">--</span><sup style="font-size: 20px">%</sup></h3><p>Tasa de Incidencias</p></div><div class="icon"><i class="fas fa-chart-line"></i></div></div></div>
+                    <div class="col-lg-3 col-6"><div class="small-box bg-danger"><div class="inner"><h3><span id="kpi-total-excedidos">--</span></h3><p>Total Incidencias (Excedidos)</p></div><div class="icon"><i class="fas fa-exclamation-circle"></i></div></div></div>
+                </div>
+                <div class="row">
+                    <div class="col-12"><div class="card"><div class="card-header"><h3 class="card-title">Diagrama de Pareto de Incidencias</h3></div><div class="card-body"><canvas id="pareto-chart"></canvas></div></div></div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-7">
+                        <div class="card"><div class="card-header"><h3 class="card-title">Distribución de Tiempos de Exposición</h3></div><div class="card-body"><canvas id="histograma-chart"></canvas></div></div>
+                        <div class="card"><div class="card-header"><h3 class="card-title">Mapa de Calor de Ingresos (Día/Hora)</h3></div><div class="card-body"><div id="heatmap-container"></div></div></div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="card"><div class="card-header"><h3 class="card-title">Resumen por Trabajador (Informe de Incidencias)</h3></div><div class="card-body p-0"><table class="table table-sm" id="analiticas-table"><thead><tr><th>Trabajador</th><th>T. Promedio</th><th>T. Total</th><th>Frecuencia</th><th>Incidencias</th></tr></thead><tbody></tbody></table></div></div>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <footer class="main-footer"><strong>Copyright &copy; 2025 <a href="#">Nestlé</a>.</strong> Todos los derechos reservados.<div class="float-right d-none d-sm-inline-block"><b>Sistema de Monitoreo Central</b> v1.0</div></footer>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/js/adminlte.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- SCRIPT DE SUPABASE (JS) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+      // --- ¡CONFIGURACIÓN OBLIGATORIA DE SUPABASE! ---
+      const SUPABASE_URL = 'https://TU_ID_PROYECTO.supabase.co'; // <--- CAMBIA ESTO
+      const SUPABASE_ANON_KEY = 'TU_ANON_KEY'; // <--- CAMBIA ESTO (Es la clave pública 'anon', no la 'service_role')
+      // --------------------------------------------------
+
+      // Inicializar el cliente de Supabase
+      const { createClient } = supabase;
+      const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // --- Elementos del DOM ---
+        const viewTitle=document.getElementById("view-title"),breadcrumbActive=document.getElementById("breadcrumb-active"),navLinks=document.querySelectorAll(".nav-link[data-view]"),historicoTableBody=document.querySelector("#historico-table tbody"),historicoVacio=document.getElementById("historico-vacio"),btnFiltrar=document.getElementById("btn-filtrar"),btnLimpiar=document.getElementById("btn-limpiar-filtros"),paginationControls=document.getElementById("pagination-controls"),prevPageBtn=document.getElementById("prev-page"),nextPageBtn=document.getElementById("next-page"),pageInfo=document.getElementById("page-info"),filtroSucursalHist=document.getElementById("filtro-sucursal-hist"),analiticasSucursalFilter=document.getElementById("analiticas-sucursal-filter"),historicoLoading=document.getElementById("historico-loading"),analiticasLoading=document.getElementById("analiticas-loading");
+        let currentPage = 1; let histogramaChart, paretoChart;
+
+        // --- Funciones de Utilidad ---
+        function formatDuration(s) { if (isNaN(s) || s === null || s < 0) return '-'; const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), c = Math.round(s % 60); let p = []; if (h > 0) p.push(`${h}h`); if (m > 0) p.push(`${m}m`); if (c >= 0 && p.length < 2) p.push(`${c}s`); return p.join(' ') || '0s'; }
+
+        // --- Lógica de Navegación y Vistas ---
+        function switchView(v){document.querySelectorAll(".content-section").forEach(e=>e.classList.remove("active"));document.getElementById(`${v}-view`).classList.add("active");navLinks.forEach(e=>e.classList.remove("active"));document.querySelector(`.nav-link[data-view="${v}"]`).classList.add("active");const titleMap={dashboard:"Monitoreo en Tiempo Real",historico:"Histórico de Eventos",analiticas:"Analíticas de Rendimiento"};const breadcrumbMap={dashboard:"Dashboard",historico:"Histórico",analiticas:"Analíticas"};viewTitle.textContent=titleMap[v]||"Dashboard";breadcrumbActive.textContent=breadcrumbMap[v]||"Dashboard";if(v==="historico"){fetchHistorico()}else if(v==="analiticas"){fetchAnaliticas()}}
+        navLinks.forEach(l=>{l.addEventListener("click",e=>{e.preventDefault();const v=l.getAttribute("data-view");if(v)switchView(v)})});
+
+        // --- Lógica de Carga de Sucursales ---
+        async function loadSucursales() {
+            try {
+                const { data, error } = await _supabase.from('sucursal').select('id, nombre');
+                if (error) throw error;
+                [filtroSucursalHist, analiticasSucursalFilter].forEach(select => {
+                    data.forEach(s => {
+                        const option = document.createElement('option');
+                        option.value = s.id;
+                        option.textContent = s.nombre;
+                        select.appendChild(option);
+                    });
+                });
+            } catch (e) { console.error("Error cargando sucursales:", e); }
+        }
+
+        // --- Lógica de Histórico y Paginación (con Supabase-JS) ---
+        async function fetchHistorico(){
+            historicoLoading.style.display = 'flex';
+            const PAGE_SIZE = 50;
+            const offset = (currentPage - 1) * PAGE_SIZE;
+
+            try {
+                let query = _supabase.from('historico').select('id, employee_id, name, hora_entrada, hora_salida, tiempo_dentro_segundos, sucursal:sucursal_id(nombre)', { count: 'exact' })
+                    .order('id', { ascending: false })
+                    .range(offset, offset + PAGE_SIZE - 1);
+
+                const idEmpleado = document.getElementById('filtro-id-empleado').value, nombre = document.getElementById('filtro-nombre').value, fechaDesde = document.getElementById('filtro-fecha-desde').value, fechaHasta = document.getElementById('filtro-fecha-hasta').value, sucursalId = filtroSucursalHist.value;
+                if (idEmpleado) query = query.eq('employee_id', idEmpleado);
+                if (nombre) query = query.ilike('name', `%${nombre}%`);
+                if (fechaDesde) query = query.gte('hora_entrada', `${fechaDesde}T00:00:00`);
+                if (fechaHasta) query = query.lte('hora_entrada', `${fechaHasta}T23:59:59`);
+                if (sucursalId) query = query.eq('sucursal_id', sucursalId);
+
+                const { data, error, count } = await query;
+                if (error) throw error;
+                
+                historicoTableBody.innerHTML = "";
+                if (data.length === 0) { historicoVacio.style.display = "block"; paginationControls.style.display = "none"; }
+                else {
+                    historicoVacio.style.display = "none"; paginationControls.style.display = "block";
+                    data.forEach(e => { const row = document.createElement("tr"), tiempoDentro = formatDuration(e.tiempo_dentro_segundos), horaSalida = e.hora_salida ? new Date(e.hora_salida).toLocaleString("es-CL") : '-'; row.innerHTML = `<td>${e.id}</td><td>${e.sucursal.nombre}</td><td>${e.employee_id}</td><td>${e.name}</td><td>${new Date(e.hora_entrada).toLocaleString("es-CL")}</td><td>${horaSalida}</td><td>${tiempoDentro}</td>`; historicoTableBody.appendChild(row); });
+                    updatePagination({ current_page: currentPage, total_pages: Math.ceil(count / PAGE_SIZE) });
+                }
+            } catch(e) { console.error("Error al cargar historial:", e); historicoVacio.style.display = "block"; historicoTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error al cargar los datos: ${e.message}</td></tr>`; }
+            finally { historicoLoading.style.display = 'none'; }
+        }
+        function updatePagination({ current_page, total_pages }) { pageInfo.textContent = `Página ${current_page} de ${total_pages}`; prevPageBtn.parentElement.classList.toggle('disabled', current_page <= 1); nextPageBtn.parentElement.classList.toggle('disabled', current_page >= total_pages); }
+        btnFiltrar.addEventListener('click', () => { currentPage = 1; fetchHistorico(); });
+        btnLimpiar.addEventListener('click', () => { document.getElementById('filtro-id-empleado').value = ''; document.getElementById('filtro-nombre').value = ''; document.getElementById('filtro-fecha-desde').value = ''; document.getElementById('filtro-fecha-hasta').value = ''; filtroSucursalHist.value = ''; currentPage = 1; fetchHistorico(); });
+        prevPageBtn.addEventListener('click', (e) => { e.preventDefault(); if (currentPage > 1) { currentPage--; fetchHistorico(); } });
+        nextPageBtn.addEventListener('click', (e) => { e.preventDefault(); currentPage++; fetchHistorico(); });
+
+        // --- Lógica de Analíticas (con Supabase-JS) ---
+        // Para esto, crearemos una Función RPC en Supabase
+        async function fetchAnaliticas() {
+            analiticasLoading.style.display = 'flex';
+            const params = {};
+            const periodo = document.querySelector("#analiticas-periodo-filter button.active")?.dataset.periodo;
+            const fechaDesde = document.getElementById('analiticas-fecha-desde').value;
+            const fechaHasta = document.getElementById('analiticas-fecha-hasta').value;
+            const sucursalId = analiticasSucursalFilter.value;
+            
+            if (fechaDesde && fechaHasta) {
+                params.p_fecha_desde = `${fechaDesde}T00:00:00`; 
+                params.p_fecha_hasta = `${fechaHasta}T23:59:59`;
+            } else if (periodo) {
+                params.p_periodo = periodo;
+            }
+            if(sucursalId) params.p_sucursal_id = parseInt(sucursalId);
+
+            try {
+                // Llamamos a la función RPC 'get_analiticas' que debemos crear en Supabase
+                const { data, error } = await _supabase.rpc('get_analiticas', params);
+                if (error) throw error;
+                
+                document.getElementById('kpi-promedio').textContent = formatDuration(Math.round(data.kpis.tiempo_promedio_general));
+                document.getElementById('kpi-cumplimiento').textContent = data.kpis.cumplimiento_seguridad.toFixed(1);
+                document.getElementById('kpi-tasa-excedidos').textContent = data.kpis.tasa_excedidos.toFixed(1);
+                document.getElementById('kpi-total-excedidos').textContent = data.kpis.total_excedidos;
+
+                const tablaBody = document.querySelector("#analiticas-table tbody");
+                tablaBody.innerHTML = '';
+                const resumenCombinado = data.resumen_trabajador.map(r => ({ ...r, total_excedidos: data.excedidos_trabajador[r.employee_id] || 0 }));
+                resumenCombinado.sort((a, b) => b.total_excedidos - a.total_excedidos).forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${item.name}</td><td>${formatDuration(Math.round(item.promedio_segundos))}</td><td>${formatDuration(item.tiempo_total)}</td><td>${item.total_ingresos}</td><td>${item.total_excedidos}</td>`;
+                    tablaBody.appendChild(row);
+                });
+
+                renderHistograma(data.graficos.histograma);
+                renderHeatmap(data.graficos.heatmap);
+                renderParetoChart(data.graficos.pareto);
+
+            } catch (error) { console.error("Error al cargar analíticas:", error); alert(`Error al cargar analíticas: ${error.message}. ¿Creaste la función RPC 'get_analiticas' en Supabase?`); }
+            finally { analiticasLoading.style.display = 'none'; }
+        }
+        
+        function renderHistograma(data) {
+            const ctx = document.getElementById('histograma-chart').getContext('2d');
+            if (histogramaChart) histogramaChart.destroy();
+            histogramaChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: Object.keys(data), datasets: [{ label: 'Nº de Ingresos', data: Object.values(data), backgroundColor: 'rgba(0, 123, 255, 0.7)' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+            });
+        }
+        
+        function renderHeatmap(data) {
+            const container = document.getElementById('heatmap-container');
+            container.innerHTML = '';
+            const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            let table = '<table class="heatmap-table"><thead><tr><th></th>';
+            for(let i=0; i<24; i++) { table += `<th>${i.toString().padStart(2,'0')}</th>`; }
+            table += '</tr></thead><tbody>';
+            let maxVal = 1;
+            Object.values(data).forEach(dayData => { if (dayData) { const dayMax = Math.max(...Object.values(dayData)); if (dayMax > maxVal) maxVal = dayMax; }});
+            for(let i=0; i<7; i++) { const dayIndex = i.toString(); table += `<tr><th>${days[i]}</th>`; for(let h=0; h<24; h++) { const value = data[dayIndex] ? (data[dayIndex][h] || 0) : 0; const opacity = value > 0 ? 0.1 + (value / maxVal) * 0.9 : 0; const color = `rgba(0, 123, 255, ${opacity})`; table += `<td class="heatmap-cell" style="background-color: ${color}" title="${value} ingresos"></td>`; } table += '</tr>'; }
+            table += '</tbody></table>'; container.innerHTML = table;
+        }
+
+        function renderParetoChart(data) {
+            const ctx = document.getElementById('pareto-chart').getContext('2d');
+            if(paretoChart) paretoChart.destroy();
+            const labels = data.map(d => d.name);
+            paretoChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { type: 'bar', label: 'Nº de Incidencias', data: data.map(d => d.excedidos), backgroundColor: 'rgba(220, 53, 69, 0.7)', yAxisID: 'y' },
+                        { type: 'line', label: '% Acumulado', data: data.map(d => d.cumulative_percent), borderColor: 'rgba(255, 159, 64, 1)', yAxisID: 'y1', tension: 0.1 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { type: 'linear', position: 'left', beginAtZero: true, ticks: { stepSize: 1 } }, y1: { type: 'linear', position: 'right', min: 0, max: 100, ticks: { callback: value => value + '%' } } } }
+            });
+        }
+
+        document.querySelectorAll("#analiticas-periodo-filter button").forEach(b => b.addEventListener('click', () => { 
+            document.querySelectorAll("#analiticas-periodo-filter button").forEach(btn => btn.classList.remove('active'));
+            b.classList.add('active');
+            document.getElementById('analiticas-fecha-desde').value = '';
+            document.getElementById('analiticas-fecha-hasta').value = '';
+            fetchAnaliticas();
+        }));
+        document.getElementById('btn-filtrar-analiticas').addEventListener('click', () => {
+             document.querySelectorAll("#analiticas-periodo-filter button").forEach(btn => btn.classList.remove('active'));
+             fetchAnaliticas();
+        });
+
+
+        // --- Conexión Inicial ---
+        loadSucursales();
+        switchView('historico'); // Iniciar en la pestaña de histórico
+      });
+    </script>
+  </body>
+</html>
