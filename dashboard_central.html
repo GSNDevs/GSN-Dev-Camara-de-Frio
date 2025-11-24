@@ -7,25 +7,212 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.1/dist/css/adminlte.min.css" />
+    <!-- Librería SheetJS para Exportar Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <style>
         @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes float{0%{transform:translateY(0px)}50%{transform:translateY(-5px)}100%{transform:translateY(0px)}}
+        
         .content-section { display: none; }
         .content-section.active { display: block; animation: fadeIn .5s; }
         .heatmap-table{border-collapse:collapse;width:100%}.heatmap-table th,.heatmap-table td{font-size:.7rem;text-align:center;padding:.2rem;border:1px solid #dee2e6}.heatmap-table th:first-child{text-align:left;width:60px}.heatmap-cell{width:3.8%;height:25px;transition:background-color .3s}
         .loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.7); z-index: 50; display: flex; align-items: center; justify-content: center; }
+        
+        /* --- ESTILOS LOGIN MEJORADO --- */
+        #login-view { 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: linear-gradient(135deg, #e0eaFC 0%, #cfdef3 100%); /* Degradado suave */
+        }
+        
+        .login-box {
+            width: 420px; /* Un poco más ancho para elegancia */
+            margin: 0 20px; /* Margen en móbiles */
+        }
+
+        .card-login-custom {
+            border: none;
+            border-radius: 20px; /* Bordes muy redondeados */
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15), 0 5px 15px rgba(0,0,0,0.05); /* Sombra profunda */
+            overflow: hidden;
+            background: #fff;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .login-header-custom {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); /* Azul corporativo */
+            padding: 40px 20px 50px; /* Extra padding abajo para la curva */
+            text-align: center;
+            color: white;
+            position: relative;
+            clip-path: ellipse(150% 100% at 50% 0%); /* Curva inferior sutil */
+        }
+
+        .login-logo a {
+            color: #fff !important;
+            font-weight: 700;
+            font-size: 2.2rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            text-decoration: none;
+        }
+        
+        .login-subtext {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9rem;
+            margin-top: 5px;
+            font-weight: 300;
+        }
+
+        .login-card-body-custom {
+            padding: 40px 30px;
+        }
+
+        /* Inputs Redondeados */
+        .input-group-custom {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .form-control-custom {
+            border-radius: 50px; /* Forma de píldora */
+            height: 50px;
+            padding-left: 20px;
+            padding-right: 45px; /* Espacio para el icono */
+            border: 1px solid #e1e5eb;
+            background-color: #f8f9fa;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-control-custom:focus {
+            background-color: #fff;
+            border-color: #007bff;
+            box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #adb5bd;
+            z-index: 10;
+            transition: color 0.3s;
+        }
+        
+        .form-control-custom:focus + .input-icon {
+            color: #007bff;
+        }
+
+        /* Botón con estilo */
+        .btn-login-custom {
+            border-radius: 50px;
+            height: 50px;
+            background: linear-gradient(90deg, #007bff 0%, #0062cc 100%);
+            border: none;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            font-size: 1.1rem;
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-login-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 123, 255, 0.4);
+        }
+        
+        .btn-login-custom:disabled {
+            background: #ccc;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Footer del login */
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .wrapper { display: none; } /* Oculto por defecto hasta autenticar */
     </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
+
+    <!-- VISTA DE LOGIN MEJORADA -->
+    <div id="login-view">
+        <div class="login-box">
+            <div class="card card-login-custom">
+                <!-- Header Azul Curvo -->
+                <div class="login-header-custom">
+                    <div class="login-logo mb-0">
+                        <a href="#"><i class="fas fa-snowflake mr-2"></i><b>Cámara</b>de Frio</a>
+                    </div>
+                    <div class="login-subtext">Sistema Central de Analíticas</div>
+                </div>
+                
+                <div class="card-body login-card-body-custom">
+                    <p class="login-box-msg text-muted mb-4">Bienvenido, ingresa tus credenciales</p>
+                    
+                    <form id="login-form">
+                        <div class="input-group-custom">
+                            <input type="email" id="email" class="form-control form-control-custom" placeholder="Correo Electrónico" required>
+                            <span class="fas fa-envelope input-icon"></span>
+                        </div>
+                        
+                        <div class="input-group-custom">
+                            <input type="password" id="password" class="form-control form-control-custom" placeholder="Contraseña" required>
+                            <span class="fas fa-lock input-icon"></span>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <button type="submit" id="btn-login" class="btn btn-primary btn-block btn-login-custom">
+                                    INGRESAR <i class="fas fa-arrow-right ml-2" style="font-size: 0.8rem"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <p id="login-error" class="text-danger mt-3 text-center small" style="display:none; background: #ffe6e6; padding: 10px; border-radius: 10px;"></p>
+                    </form>
+
+                    <div class="login-footer">
+                        &copy; 2025 GSN. <br> Acceso restringido a personal autorizado.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APLICACIÓN PRINCIPAL (DASHBOARD) - SIN CAMBIOS -->
     <div class="wrapper">
       <nav class="main-header navbar navbar-expand navbar-white navbar-light">
         <ul class="navbar-nav"><li class="nav-item"><a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a></li></ul>
         <ul class="navbar-nav ml-auto">
+          <!-- Botón de Logout -->
+          <li class="nav-item">
+            <button class="btn btn-danger btn-sm" id="btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </button>
+          </li>
           <li class="nav-item"><a class="nav-link" data-widget="fullscreen" href="#" role="button"><i class="fas fa-expand-arrows-alt"></i></a></li>
         </ul>
       </nav>
       <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a href="#" class="brand-link"><i class="fas fa-chart-line nav-icon ml-3 mr-2"></i><span class="brand-text font-weight-light">Analíticas Central</span></a>
         <div class="sidebar">
+          <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+            <div class="image">
+              <img src="https://ui-avatars.com/api/?name=Admin&background=random" class="img-circle elevation-2" alt="User Image" id="user-avatar">
+            </div>
+            <div class="info">
+              <a href="#" class="d-block" id="user-name">Usuario</a>
+            </div>
+          </div>
           <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
               <li class="nav-item"><a href="#historico" class="nav-link active" data-view="historico"><i class="nav-icon fas fa-history"></i><p>Histórico</p></a></li>
@@ -42,7 +229,25 @@
           <div class="container-fluid">
             <!-- VISTA HISTÓRICO -->
             <div id="historico-view" class="content-section active">
-              <div class="card"><div class="card-header"><h3 class="card-title">Filtros de Búsqueda</h3></div><div class="card-body"><div class="row g-3 align-items-center"><div class="col-md-3"><label>Sucursal:</label><select id="filtro-sucursal-hist" class="form-control"><option value="">Todas</option></select></div><div class="col-md-3"><label>ID Empleado:</label><input type="text" id="filtro-id-empleado" class="form-control" placeholder="ID Empleado"></div><div class="col-md-3"><label>Nombre:</label><input type="text" id="filtro-nombre" class="form-control" placeholder="Nombre"></div><div class="col-md-3"></div><div class="col-md-3"><label>Desde:</label><input type="date" id="filtro-fecha-desde" class="form-control"></div><div class="col-md-3"><label>Hasta:</label><input type="date" id="filtro-fecha-hasta" class="form-control"></div><div class="col-md-3 d-flex align-items-end"><button class="btn btn-primary" id="btn-filtrar">Filtrar</button><button class="btn btn-secondary ml-2" id="btn-limpiar-filtros">Limpiar</button></div></div></div></div>
+              <div class="card">
+                  <div class="card-header"><h3 class="card-title">Filtros de Búsqueda</h3></div>
+                  <div class="card-body">
+                      <div class="row g-3 align-items-center">
+                          <div class="col-md-3"><label>Sucursal:</label><select id="filtro-sucursal-hist" class="form-control"><option value="">Todas</option></select></div>
+                          <div class="col-md-3"><label>ID Empleado:</label><input type="text" id="filtro-id-empleado" class="form-control" placeholder="ID Empleado"></div>
+                          <div class="col-md-3"><label>Nombre:</label><input type="text" id="filtro-nombre" class="form-control" placeholder="Nombre"></div>
+                          <div class="col-md-3"></div>
+                          <div class="col-md-3"><label>Desde:</label><input type="date" id="filtro-fecha-desde" class="form-control"></div>
+                          <div class="col-md-3"><label>Hasta:</label><input type="date" id="filtro-fecha-hasta" class="form-control"></div>
+                          <div class="col-md-3 d-flex align-items-end">
+                              <button class="btn btn-primary" id="btn-filtrar">Filtrar</button>
+                              <button class="btn btn-secondary ml-2" id="btn-limpiar-filtros">Limpiar</button>
+                              <!-- BOTÓN EXPORTAR EXCEL -->
+                              <button class="btn btn-success ml-2" id="btn-exportar"><i class="fas fa-file-excel"></i> Excel</button>
+                          </div>
+                      </div>
+                  </div>
+              </div>
               <div class="card" id="historico-card"><div class="card-header"><h3 class="card-title">Registro de Eventos</h3></div><div class="card-body p-0"><table class="table table-striped" id="historico-table"><thead><tr><th>ID Evento</th><th>Sucursal</th><th>ID Empleado</th><th>Nombre</th><th>Hora Entrada</th><th>Hora Salida</th><th>Tiempo Dentro</th></tr></thead><tbody></tbody></table><div id="historico-vacio" class="text-center text-muted py-5" style="display: none;"><i class="fas fa-folder-open fa-3x mb-3"></i><p>No hay registros para los filtros seleccionados</p></div></div><div class="card-footer clearfix" id="pagination-controls" style="display: none;"><ul class="pagination pagination-sm m-0 float-right"><li class="page-item"><a class="page-link" href="#" id="prev-page">&laquo; Anterior</a></li><li class="page-item disabled"><span class="page-link" id="page-info">Página 1 de 1</span></li><li class="page-item"><a class="page-link" href="#" id="next-page">Siguiente &raquo;</a></li></ul></div><div id="historico-loading" class="loading-overlay" style="display: none;"><i class="fas fa-2x fa-sync-alt fa-spin"></i></div></div>
             </div>
              <!-- VISTA ANALÍTICAS -->
@@ -82,7 +287,7 @@
           </div>
         </section>
       </div>
-      <footer class="main-footer"><strong>Copyright &copy; 2025 <a href="#">Nestlé</a>.</strong> Todos los derechos reservados.<div class="float-right d-none d-sm-inline-block"><b>Sistema de Monitoreo Central</b> v1.0</div></footer>
+      <footer class="main-footer"><strong>Copyright &copy; 2025 <a href="#">GSN</a>.</strong> Todos los derechos reservados.<div class="float-right d-none d-sm-inline-block"><b>Sistema de Monitoreo Central</b> v1.0</div></footer>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -93,22 +298,93 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script>
-      // --- ¡CONFIGURACIÓN OBLIGATORIA DE SUPABASE! ---
-      const SUPABASE_URL = 'https://TU_ID_PROYECTO.supabase.co'; // <--- CAMBIA ESTO
-      const SUPABASE_ANON_KEY = 'TU_ANON_KEY'; // <--- CAMBIA ESTO (Es la clave pública 'anon', no la 'service_role')
+      // --- ¡CONFIGURACIÓN DE SUPABASE ACTUALIZADA! ---
+      const SUPABASE_URL = 'https://kytttqnetotcvdbflkea.supabase.co'; 
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5dHR0cW5ldG90Y3ZkYmZsa2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwODIyMjksImV4cCI6MjA3ODY1ODIyOX0.gcOs35NGp57kKNPMBWw_2zlymJSoQKPgUGxHXUM0ObE';
       // --------------------------------------------------
 
       // Inicializar el cliente de Supabase
       const { createClient } = supabase;
       const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("DOMContentLoaded", async () => {
         // --- Elementos del DOM ---
         const viewTitle=document.getElementById("view-title"),breadcrumbActive=document.getElementById("breadcrumb-active"),navLinks=document.querySelectorAll(".nav-link[data-view]"),historicoTableBody=document.querySelector("#historico-table tbody"),historicoVacio=document.getElementById("historico-vacio"),btnFiltrar=document.getElementById("btn-filtrar"),btnLimpiar=document.getElementById("btn-limpiar-filtros"),paginationControls=document.getElementById("pagination-controls"),prevPageBtn=document.getElementById("prev-page"),nextPageBtn=document.getElementById("next-page"),pageInfo=document.getElementById("page-info"),filtroSucursalHist=document.getElementById("filtro-sucursal-hist"),analiticasSucursalFilter=document.getElementById("analiticas-sucursal-filter"),historicoLoading=document.getElementById("historico-loading"),analiticasLoading=document.getElementById("analiticas-loading");
+        const btnExportar = document.getElementById("btn-exportar");
+        
+        // --- Elementos de Autenticación ---
+        const loginView = document.getElementById("login-view");
+        const wrapperView = document.querySelector(".wrapper");
+        const loginForm = document.getElementById("login-form");
+        const loginError = document.getElementById("login-error");
+        const btnLogin = document.getElementById("btn-login");
+        const btnLogout = document.getElementById("btn-logout");
+        const userNameDisplay = document.getElementById("user-name");
+
         let currentPage = 1; let histogramaChart, paretoChart;
 
         // --- Funciones de Utilidad ---
         function formatDuration(s) { if (isNaN(s) || s === null || s < 0) return '-'; const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), c = Math.round(s % 60); let p = []; if (h > 0) p.push(`${h}h`); if (m > 0) p.push(`${m}m`); if (c >= 0 && p.length < 2) p.push(`${c}s`); return p.join(' ') || '0s'; }
+
+        // --- GESTIÓN DE SESIÓN ---
+        
+        // 1. Revisar sesión al cargar
+        const { data: { session } } = await _supabase.auth.getSession();
+        updateSessionUI(session);
+
+        // 2. Escuchar cambios de sesión
+        _supabase.auth.onAuthStateChange((event, session) => {
+            updateSessionUI(session);
+        });
+
+        function updateSessionUI(session) {
+            if (session) {
+                // Usuario autenticado
+                loginView.style.display = 'none';
+                wrapperView.style.display = 'block';
+                userNameDisplay.textContent = session.user.email;
+                // Cargar datos iniciales solo si hay sesión
+                loadSucursales();
+                fetchHistorico(); 
+            } else {
+                // Usuario NO autenticado
+                wrapperView.style.display = 'none';
+                loginView.style.display = 'flex';
+            }
+        }
+
+        // 3. Manejar Login
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            btnLogin.disabled = true;
+            btnLogin.innerHTML = 'INGRESANDO... <i class="fas fa-spinner fa-spin"></i>';
+            loginError.style.display = 'none';
+
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                loginError.textContent = "Error: " + error.message;
+                loginError.style.display = 'block';
+                btnLogin.disabled = false;
+                btnLogin.innerHTML = 'INGRESAR <i class="fas fa-arrow-right ml-2" style="font-size: 0.8rem"></i>';
+            } else {
+                // El onAuthStateChange manejará la redirección
+            }
+        });
+
+        // 4. Manejar Logout
+        btnLogout.addEventListener('click', async () => {
+            const { error } = await _supabase.auth.signOut();
+            if (error) console.error('Error al cerrar sesión:', error);
+            // El onAuthStateChange manejará la redirección
+        });
+
 
         // --- Lógica de Navegación y Vistas ---
         function switchView(v){document.querySelectorAll(".content-section").forEach(e=>e.classList.remove("active"));document.getElementById(`${v}-view`).classList.add("active");navLinks.forEach(e=>e.classList.remove("active"));document.querySelector(`.nav-link[data-view="${v}"]`).classList.add("active");const titleMap={dashboard:"Monitoreo en Tiempo Real",historico:"Histórico de Eventos",analiticas:"Analíticas de Rendimiento"};const breadcrumbMap={dashboard:"Dashboard",historico:"Histórico",analiticas:"Analíticas"};viewTitle.textContent=titleMap[v]||"Dashboard";breadcrumbActive.textContent=breadcrumbMap[v]||"Dashboard";if(v==="historico"){fetchHistorico()}else if(v==="analiticas"){fetchAnaliticas()}}
@@ -119,7 +395,9 @@
             try {
                 const { data, error } = await _supabase.from('sucursal').select('id, nombre');
                 if (error) throw error;
+                // Limpiar antes de llenar para evitar duplicados si se reconecta
                 [filtroSucursalHist, analiticasSucursalFilter].forEach(select => {
+                    select.innerHTML = '<option value="">Todas</option>'; 
                     data.forEach(s => {
                         const option = document.createElement('option');
                         option.value = s.id;
@@ -130,8 +408,12 @@
             } catch (e) { console.error("Error cargando sucursales:", e); }
         }
 
-        // --- Lógica de Histórico y Paginación (con Supabase-JS) ---
+        // --- Lógica de Histórico y Paginación ---
         async function fetchHistorico(){
+            // Verificación extra de seguridad en frontend
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) return; 
+
             historicoLoading.style.display = 'flex';
             const PAGE_SIZE = 50;
             const offset = (currentPage - 1) * PAGE_SIZE;
@@ -158,18 +440,94 @@
                     data.forEach(e => { const row = document.createElement("tr"), tiempoDentro = formatDuration(e.tiempo_dentro_segundos), horaSalida = e.hora_salida ? new Date(e.hora_salida).toLocaleString("es-CL") : '-'; row.innerHTML = `<td>${e.id}</td><td>${e.sucursal.nombre}</td><td>${e.employee_id}</td><td>${e.name}</td><td>${new Date(e.hora_entrada).toLocaleString("es-CL")}</td><td>${horaSalida}</td><td>${tiempoDentro}</td>`; historicoTableBody.appendChild(row); });
                     updatePagination({ current_page: currentPage, total_pages: Math.ceil(count / PAGE_SIZE) });
                 }
-            } catch(e) { console.error("Error al cargar historial:", e); historicoVacio.style.display = "block"; historicoTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error al cargar los datos: ${e.message}</td></tr>`; }
+            } catch(e) { console.error("Error al cargar historial:", e); historicoVacio.style.display = "block"; historicoTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error al cargar los datos (Posiblemente permisos): ${e.message}</td></tr>`; }
             finally { historicoLoading.style.display = 'none'; }
         }
+
+        // --- LÓGICA DE EXPORTACIÓN A EXCEL ---
+        async function exportarExcel() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) { alert("Debes iniciar sesión"); return; }
+
+            const originalText = btnExportar.innerHTML;
+            btnExportar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+            btnExportar.disabled = true;
+
+            try {
+                // 1. Recoger filtros
+                const idEmpleado = document.getElementById('filtro-id-empleado').value;
+                const nombre = document.getElementById('filtro-nombre').value;
+                const fechaDesde = document.getElementById('filtro-fecha-desde').value;
+                const fechaHasta = document.getElementById('filtro-fecha-hasta').value;
+                const sucursalId = filtroSucursalHist.value;
+
+                // 2. Construir Query a Supabase (SIN range/paginación)
+                let query = _supabase
+                    .from('historico')
+                    .select('id, employee_id, name, hora_entrada, hora_salida, tiempo_dentro_segundos, sucursal:sucursal_id(nombre)')
+                    .order('id', { ascending: false });
+                
+                if (idEmpleado) query = query.eq('employee_id', idEmpleado);
+                if (nombre) query = query.ilike('name', `%${nombre}%`);
+                if (fechaDesde) query = query.gte('hora_entrada', `${fechaDesde}T00:00:00`);
+                if (fechaHasta) query = query.lte('hora_entrada', `${fechaHasta}T23:59:59`);
+                if (sucursalId) query = query.eq('sucursal_id', sucursalId);
+
+                // 3. Ejecutar consulta
+                const { data, error } = await query;
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    alert("No hay registros para exportar con los filtros seleccionados.");
+                    return;
+                }
+
+                // 4. Formatear datos para Excel
+                const datosFormateados = data.map(item => ({
+                    "ID Evento": item.id,
+                    "Sucursal": item.sucursal ? item.sucursal.nombre : 'N/A',
+                    "ID Empleado": item.employee_id,
+                    "Nombre": item.name,
+                    "Hora Entrada": new Date(item.hora_entrada).toLocaleString("es-CL"),
+                    "Hora Salida": item.hora_salida ? new Date(item.hora_salida).toLocaleString("es-CL") : 'En cámara',
+                    "Tiempo Texto": formatDuration(item.tiempo_dentro_segundos),
+                    "Segundos Totales": item.tiempo_dentro_segundos
+                }));
+
+                // 5. Crear Workbook
+                const worksheet = XLSX.utils.json_to_sheet(datosFormateados);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Histórico");
+
+                const wscols = [{wch: 10}, {wch: 20}, {wch: 15}, {wch: 30}, {wch: 22}, {wch: 22}, {wch: 15}, {wch: 10}];
+                worksheet['!cols'] = wscols;
+
+                // 6. Descargar Archivo
+                const fechaArchivo = new Date().toISOString().split('T')[0];
+                XLSX.writeFile(workbook, `Historico_Camaras_${fechaArchivo}.xlsx`);
+
+            } catch (error) {
+                console.error("Error al exportar:", error);
+                alert("Ocurrió un error al generar el Excel: " + error.message);
+            } finally {
+                btnExportar.innerHTML = originalText;
+                btnExportar.disabled = false;
+            }
+        }
+
+        // --- Event Listeners ---
         function updatePagination({ current_page, total_pages }) { pageInfo.textContent = `Página ${current_page} de ${total_pages}`; prevPageBtn.parentElement.classList.toggle('disabled', current_page <= 1); nextPageBtn.parentElement.classList.toggle('disabled', current_page >= total_pages); }
         btnFiltrar.addEventListener('click', () => { currentPage = 1; fetchHistorico(); });
         btnLimpiar.addEventListener('click', () => { document.getElementById('filtro-id-empleado').value = ''; document.getElementById('filtro-nombre').value = ''; document.getElementById('filtro-fecha-desde').value = ''; document.getElementById('filtro-fecha-hasta').value = ''; filtroSucursalHist.value = ''; currentPage = 1; fetchHistorico(); });
+        btnExportar.addEventListener('click', exportarExcel);
         prevPageBtn.addEventListener('click', (e) => { e.preventDefault(); if (currentPage > 1) { currentPage--; fetchHistorico(); } });
         nextPageBtn.addEventListener('click', (e) => { e.preventDefault(); currentPage++; fetchHistorico(); });
 
-        // --- Lógica de Analíticas (con Supabase-JS) ---
-        // Para esto, crearemos una Función RPC en Supabase
+        // --- Lógica de Analíticas ---
         async function fetchAnaliticas() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) return; 
+
             analiticasLoading.style.display = 'flex';
             const params = {};
             const periodo = document.querySelector("#analiticas-periodo-filter button.active")?.dataset.periodo;
@@ -186,7 +544,6 @@
             if(sucursalId) params.p_sucursal_id = parseInt(sucursalId);
 
             try {
-                // Llamamos a la función RPC 'get_analiticas' que debemos crear en Supabase
                 const { data, error } = await _supabase.rpc('get_analiticas', params);
                 if (error) throw error;
                 
@@ -208,7 +565,7 @@
                 renderHeatmap(data.graficos.heatmap);
                 renderParetoChart(data.graficos.pareto);
 
-            } catch (error) { console.error("Error al cargar analíticas:", error); alert(`Error al cargar analíticas: ${error.message}. ¿Creaste la función RPC 'get_analiticas' en Supabase?`); }
+            } catch (error) { console.error("Error al cargar analíticas:", error); alert(`Error al cargar analíticas: ${error.message}. Asegúrate de haber creado la función RPC en Supabase.`); }
             finally { analiticasLoading.style.display = 'none'; }
         }
         
@@ -264,10 +621,6 @@
              fetchAnaliticas();
         });
 
-
-        // --- Conexión Inicial ---
-        loadSucursales();
-        switchView('historico'); // Iniciar en la pestaña de histórico
       });
     </script>
   </body>
