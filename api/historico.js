@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require('@supabase/supabase-js'); 
 const math = require('math'); // Nota: 'math' no se usa en este snippet, pero se mantiene del original.
 
 const supabaseUrl = process.env.SUPABASE_URL;
